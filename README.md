@@ -5,6 +5,7 @@ skuggerelieff** eller **hybrid skuggerelieff / vanleg kart**, alltid med klår
 blåfarge på vatn (inkludert småtjørner), standardiserte markørar, målestokk og
 kjeldeline. Alt blir henta direkte frå dei opne karttenestene til Kartverket,
 Lantmäteriet og Maanmittauslaitos.
+(https://pomdre.net/skuggerelieff/)
 
 ![Skuggerelieff-figurar](skjermbilete.png)
 
