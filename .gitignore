@@ -1,1 +1,4 @@
 .claude
+api keys.txt
+*.key
+*secret*
