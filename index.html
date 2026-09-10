@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skuggerelieff-figurar</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <h1>Skuggerelieff-figurar</h1>
+
+    <section>
+      <h2>Stad</h2>
+      <label for="coords">Koordinatar</label>
+      <div class="row">
+        <input id="coords" type="text" placeholder="69.0114, 23.0416  ·  33 512345 7654321" spellcheck="false">
+        <button id="goto" title="Gå til koordinatane">Gå til</button>
+      </div>
+      <div class="hint">Desimalgrader (breidd, lengd), grader-minutt-sekund, eller UTM «sone austing nording» (UTM33 = SWEREF99&nbsp;TM, UTM35 = TM35FIN).</div>
+      <label for="search">Søk stadnamn</label>
+      <div class="row">
+        <input id="search" type="text" placeholder="t.d. Kautokeino" spellcheck="false">
+        <button id="searchbtn">Søk</button>
+      </div>
+      <div id="searchresults"></div>
+      <label class="check"><input type="checkbox" id="clickplace" checked> Klikk i kartet legg til ny markør</label>
+    </section>
+
+    <section>
+      <h2>Kartoppsett</h2>
+      <label for="country">Land (fargar og kartkjelder)</label>
+      <select id="country">
+        <option value="no" selected>Noreg (norgeskart.no)</option>
+        <option value="se">Sverige (Lantmäteriet)</option>
+        <option value="fi">Finland (Maanmittauslaitos)</option>
+      </select>
+
+      <label for="blend">Figurtype: skuggerelieff ⟷ vanleg kart</label>
+      <div class="row">
+        <input id="blend" type="range" min="0" max="100" value="0">
+        <span id="blendval" class="val">0&nbsp;%</span>
+      </div>
+      <div class="hint">0 % = reint skuggerelieff. Høgare verdi = meir av det vanlege kartet oppå (hybrid).</div>
+
+      <label for="bgmap">Bakgrunnskart (i hybrid)</label>
+      <select id="bgmap">
+        <option value="national" selected>Nasjonalt kart (per land)</option>
+        <option value="opentopo">Felles for alle land (OpenTopoMap)</option>
+      </select>
+      <div class="hint">«Felles» brukar same topografiske kart i Noreg, Sverige og Finland, så figurar frå ulike land ser like ut.</div>
+
+      <label for="shadesrc">Skuggerelieff-kjelde (Noreg)</label>
+      <select id="shadesrc">
+        <option value="dtm" selected>Detaljert (nasjonal høgdemodell)</option>
+        <option value="fjell">Generalisert (fjellskygge)</option>
+      </select>
+
+      <label for="fidetail">Høgdemodell Finland (krev MML-nøkkel)</label>
+      <select id="fidetail">
+        <option value="max" selected>Maks detalj (2 m, som Kartverket – tyngre fliser)</option>
+        <option value="fast">Rask (4–8 m, lettare å panorera)</option>
+      </select>
+      <div class="hint">Maks detalj hentar 2–9 MB høgdedata per flis, så eit nytt utsnitt tek nokre sekund. Eksporten brukar dei same flisene som skjermen.</div>
+
+      <div class="row">
+        <label for="fistrength" style="margin:0">Skuggestyrke Finland</label>
+        <input id="fistrength" type="range" min="0.25" max="3" step="0.05" value="1">
+        <span id="fistrengthval" class="val">1.00</span>
+      </div>
+      <div class="hint">Z-faktor for det finske relieffet: 0,5 ≈ mjukt som Kartverket, 1 = normalt, 1,5–2 = markant (som i finske kart), så relieffet held seg tydeleg under eit kraftig hybridkart. Blir lagra med figuren. Verkar berre med MML-nøkkel.</div>
+
+      <label for="contrast">Kontrast i skuggerelieffet</label>
+      <div class="row">
+        <input id="contrast" type="range" min="-50" max="50" value="0">
+        <span id="contrastval" class="val">0</span>
+      </div>
+
+      <label for="bearing">Rotasjon (grader frå nord)</label>
+      <div class="row">
+        <input id="bearing" type="range" min="0" max="359" value="0">
+        <input id="bearingnum" type="number" min="0" max="359" value="0" style="width:56px">
+        <button id="bearingreset" title="Nord opp">Nord</button>
+      </div>
+      <div class="hint">Du kan òg rotera ved å halda inne Ctrl og dra i kartet. Rotasjonen blir med i eksporten.</div>
+    </section>
+
+    <section>
+      <h2>Vatn</h2>
+      <label for="watersrc">Vasskjelde</label>
+      <select id="watersrc">
+        <option value="national" selected>Nasjonalt kart (nøyaktige vasslinjer)</option>
+        <option value="osm">OpenStreetMap (justerbar farge)</option>
+      </select>
+      <div class="hint" id="watersrchint">Nasjonalt vatn hentar vassflater og elvar frå det same kartet som norgeskart.no – rette linjer og rett blåfarge. Sverige og Finland har ikkje eit ope vatn-lag, så dei brukar OpenStreetMap uansett.</div>
+      <div class="row" id="watercolorrow">
+        <label for="watercolor" style="margin:0">Blåfarge</label>
+        <input id="watercolor" type="color" value="#e0fefe">
+        <label for="wateroutline" style="margin:0 0 0 8px">Kantlinje</label>
+        <input id="wateroutline" type="color" value="#9acbe7">
+        <button id="waterreset" title="Tilbake til standardfargane for valt land">Standard</button>
+      </div>
+      <label class="check"><input type="checkbox" id="waterlabels" checked> Vis namn på vatn og elvar</label>
+      <label class="check"><input type="checkbox" id="waterways" checked> Vis bekker/elvar som liner</label>
+    </section>
+
+    <section>
+      <h2>Markørar</h2>
+      <div id="markerlist"></div>
+      <div class="row">
+        <button id="clearmarkers">Fjern alle markørar</button>
+      </div>
+      <div class="hint">Legg til markørar ved å klikka i kartet eller med «Gå til». Dra ein markør for å flytta han.</div>
+      <label for="markertype">Type for nye markørar</label>
+      <select id="markertype">
+        <option value="cross" selected>Kryss (×)</option>
+        <option value="dot">Prikk (fylt sirkel)</option>
+        <option value="ring">Ring (open sirkel)</option>
+      </select>
+      <label class="check"><input type="checkbox" id="showmarkers" checked> Vis markørane (og ta dei med i eksporten)</label>
+      <div class="row">
+        <label for="markersize" style="margin:0">Storleik</label>
+        <input id="markersize" type="range" min="10" max="80" value="30">
+        <span id="markersizeval" class="val">30</span>
+      </div>
+      <div class="row">
+        <label for="markercolor" style="margin:0">Farge</label>
+        <input id="markercolor" type="color" value="#d40000">
+        <label for="markerwidth" style="margin:0 0 0 10px">Strek</label>
+        <input id="markerwidth" type="range" min="2" max="12" value="5" style="width:70px">
+      </div>
+    </section>
+
+    <section>
+      <h2>Eksport</h2>
+      <label for="aspect">Format på utsnittet</label>
+      <select id="aspect">
+        <option value="free" selected>Fritt (som vindauget)</option>
+        <option value="1.5">Liggande 3:2</option>
+        <option value="1.3333">Liggande 4:3</option>
+        <option value="1">Kvadratisk 1:1</option>
+        <option value="0.75">Ståande 3:4</option>
+        <option value="0.7071">Ståande A4</option>
+      </select>
+      <div class="row">
+        <label for="exportwidth" style="margin:0">Breidd (px)</label>
+        <input id="exportwidth" type="number" min="400" max="8000" step="100" value="2400" style="width:90px">
+      </div>
+      <label for="exportratio">Detaljnivå</label>
+      <select id="exportratio">
+        <option value="screen" selected>Som på skjermen (same målestokk-inntrykk)</option>
+        <option value="2">Finare kartdetaljar (mindre tekst)</option>
+        <option value="1">Maksimale kartdetaljar (minst tekst)</option>
+      </select>
+      <div class="hint">«Som på skjermen» gjev ei fil som er nøyaktig lik førehandsvisinga, berre i høgare oppløysing. Dei andre vala hentar finare kartfliser – då blir teksten i kartet mindre i høve til utsnittet.</div>
+      <label class="check"><input type="checkbox" id="showscale" checked> Målestokk på figuren</label>
+      <label class="check"><input type="checkbox" id="shownorth"> Nordpil oppe til høgre</label>
+      <label class="check"><input type="checkbox" id="showattrib" checked> Kjeldeline (© Kartverket …)</label>
+      <button id="export" class="primary">Last ned PNG</button>
+      <div id="exportstatus" class="hint"></div>
+    </section>
+
+    <section>
+      <h2>Lagra figurar</h2>
+      <div class="row">
+        <input id="figname" type="text" placeholder="Namn, t.d. «Sárásuolu»">
+        <button id="savefig">Lagra</button>
+      </div>
+      <div id="figlist"></div>
+      <div class="row">
+        <button id="exportfigs">Eksporter liste (JSON)</button>
+        <button id="importfigs">Importer</button>
+        <input id="importfile" type="file" accept=".json" style="display:none">
+      </div>
+    </section>
+
+    <details>
+      <summary>Avansert</summary>
+      <div class="hint" style="margin-top:8px">
+        Noreg og Sverige treng ingen oppsett – alt blir henta frå opne tenester
+        hos Kartverket og Lantmäteriet.
+      </div>
+      <label for="mmlkey">API-nøkkel Maanmittauslaitos (Finland)</label>
+      <input id="mmlkey" type="text" placeholder="valfritt">
+      <div id="mmlstatus" class="hint"></div>
+      <div class="hint">
+        Med nøkkel blir det finske <strong>skuggerelieffet</strong> rekna frå Maanmittauslaitos
+        sin <strong>2 m-høgdemodell</strong> (like skarpt som Kartverket/Lantmäteriet, med same
+        grå grunntone), og i <strong>hybrid</strong> blir bakgrunnskartet MML sitt eige kart
+        (maastokartta) når «Bakgrunnskart» står på Nasjonalt. Over grensa til Noreg/Sverige
+        blir høgdene fylte inn frå den globale høgdemodellen. Utan nøkkel: global høgdemodell
+        (EU-DEM) og OpenTopoMap.<br>
+        Gratis nøkkel: registrer deg på <strong>omatili.maanmittauslaitos.fi</strong> og
+        opprett ein nøkkel for «avoimet rajapintapalvelut».
+      </div>
+    </details>
+  </aside>
+  <main id="mapwrap">
+    <button id="togglepanel" title="Vis/skjul menylinja (hurtigtast: M)">‹</button>
+    <div id="mapbox"><div id="map"></div></div>
+  </main>
+</div>
+<div id="exportcontainer"></div>
+<script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
