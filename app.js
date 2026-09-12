@@ -75,7 +75,7 @@ const ui = {
   markersize: $("markersize"), markersizeval: $("markersizeval"),
   markercolor: $("markercolor"), markerwidth: $("markerwidth"),
   aspect: $("aspect"), exportwidth: $("exportwidth"), exportratio: $("exportratio"),
-  showscale: $("showscale"), showattrib: $("showattrib"),
+  showscale: $("showscale"), showattrib: $("showattrib"), exportmapwater: $("exportmapwater"),
   export: $("export"), exportstatus: $("exportstatus"),
   figname: $("figname"), savefig: $("savefig"), figlist: $("figlist"),
   exportfigs: $("exportfigs"), importfigs: $("importfigs"), importfile: $("importfile"),
@@ -107,9 +107,15 @@ function topoSpec() {
 }
 
 // SE/FI i national-modus: vatnet finst berre i bakgrunnskartet (ikkje eit eige lag).
-// Då kan vi ved eksport plukka vatnet ut av kartet og teikna det skarpt.
+// Då KAN vi ved eksport plukka vatnet ut av kartet og teikna det skarpt – men det
+// gjev meir vatn i fila enn på skjermen, så det er eit val (av som standard:
+// eksporten skal vera lik førehandsvisinga).
 function mapWaterMode() {
-  return ui.watersrc.value === "national" && !PRESETS[ui.country.value].waterRaster;
+  return (
+    ui.watersrc.value === "national" &&
+    !PRESETS[ui.country.value].waterRaster &&
+    ui.exportmapwater.checked
+  );
 }
 
 // éin sanning for kjelde-kreditering (brukt både av skjerm-info og eksport-line)
@@ -1005,9 +1011,11 @@ function currentAttribution(fiFallback = false) {
     add("© OpenStreetMap"); // OSM-vektorvatn
   } else if (PRESETS[c].waterRaster) {
     add("© Kartverket"); // Noreg: nasjonalt vatn-raster (allereie kreditert)
-  } else {
-    // SE/FI national: vatnet blir plukka ut av topo-kartet ved eksport – same kjelde
+  } else if (mapWaterMode()) {
+    // SE/FI: vatnet blir i tillegg plukka ut av topo-kartet ved eksport – same kjelde
     add(topo.name); if (topo.osm) add("© OpenStreetMap");
+  } else {
+    add("© OpenStreetMap"); // SE/FI: berre OSM-vatnet, akkurat som på skjermen
   }
 
   // 4) vassnamn (etikettar) frå OpenStreetMap
@@ -1025,7 +1033,7 @@ function updateWaterUI() {
   if (wantNational && hasNat) {
     hint.textContent = "Noreg: vassflater og elvar blir henta frå same nasjonale kart som norgeskart.no – nøyaktige linjer og norgeskart-blått, òg i reint skuggerelieff.";
   } else if (wantNational && !hasNat) {
-    hint.textContent = "Sverige/Finland: på skjermen ser du OpenStreetMap-vatn (blått). Ved eksport blir det nøyaktige vatnet frå det nasjonale/hybrid-kartet lagt oppå i full oppløysing – òg på reint skuggerelieff.";
+    hint.textContent = "Sverige/Finland har ikkje eit ope vatn-lag, så vatnet kjem frå OpenStreetMap – og eksporten blir lik det du ser. Vil du i tillegg ha vassflatene frå det nasjonale kartet (meir komplett, men meir vatn enn på skjermen), kryss av «Hent ekstra vatn frå kartet» under Eksport.";
   } else {
     hint.textContent = "Vatnet kjem frå OpenStreetMap – farge og kantlinje kan justerast fritt, men ein del sjøar manglar i Sverige.";
   }
@@ -1468,6 +1476,7 @@ function currentSettings() {
     exportRatio: ui.exportratio.value,
     showScale: ui.showscale.checked,
     showAttrib: ui.showattrib.checked,
+    exportMapWater: ui.exportmapwater.checked,
   };
 }
 
@@ -1500,6 +1509,7 @@ function applySettings(s) {
   ui.exportratio.value = ["screen", "1", "2"].includes(er) ? er : "screen";
   ui.showscale.checked = s.showScale !== false;
   ui.showattrib.checked = s.showAttrib !== false;
+  ui.exportmapwater.checked = s.exportMapWater === true; // gamle figurar: eksport lik skjermen
   updateWaterUI();
   applyAspect();
   refreshStyle();

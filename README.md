@@ -68,12 +68,13 @@ Under *Vatn* kan du velja vasskjelde:
 
 - **Noreg**: «Nasjonalt kart» hentar vassflater og elvar frå same kart som
   norgeskart.no – nøyaktige linjer og rett blåfarge, òg i reint skuggerelieff.
-- **Sverige/Finland**: Det finst ikkje eit ope nasjonalt vatn-lag der. Med
-  «Nasjonalt kart» vald ser du OpenStreetMap-vatn (blått) på skjermen medan du
-  komponerer, og ved **eksport** blir det nøyaktige vatnet frå det nasjonale
-  kartet (Lantmäteriet / OpenTopoMap / MML) plukka ut i full oppløysing og lagt
-  oppå – òg i reint skuggerelieff. «OpenStreetMap»-valet gjev justerbar blåfarge
-  men manglar nokre sjøar i Sverige.
+- **Sverige/Finland**: Det finst ikkje eit ope nasjonalt vatn-lag der, så vatnet
+  kjem frå OpenStreetMap. Den nedlasta figuren får då nøyaktig same vatn som du
+  ser på skjermen. Vil du i tillegg ha vassflatene frå det nasjonale kartet
+  (Lantmäteriet / OpenTopoMap / MML) plukka ut i full oppløysing og lagde oppå,
+  kryss av **«Hent ekstra vatn frå kartet»** under *Eksport*. Det gjev meir
+  komplett vatn, men då inneheld fila meir vatn enn førehandsvisinga.
+  «OpenStreetMap»-valet gjev i tillegg justerbar blåfarge.
 
 ### Felles bakgrunnskart
 
